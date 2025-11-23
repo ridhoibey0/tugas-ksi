@@ -32,9 +32,12 @@ router.get('/', async (req, res) => {
     const salesTrend = await db('sales')
       .select(db.raw('DATE(created_at) as date'))
       .sum('total_amount as total')
-      .whereRaw('created_at >= ?', [format(subDays(new Date(), 6), 'yyyy-MM-dd')])
+      .whereRaw('DATE(created_at) >= DATE(?)', [format(subDays(new Date(), 6), 'yyyy-MM-dd')])
       .groupByRaw('DATE(created_at)')
-      .orderByRaw('DATE(created_at)');
+      .orderByRaw('DATE(created_at) ASC');
+    
+    console.log('Sales Trend Data:', salesTrend);
+    console.log('Date Range:', format(subDays(new Date(), 6), 'yyyy-MM-dd'), 'to', format(new Date(), 'yyyy-MM-dd'));
     
     // Get best selling products
     const bestSelling = await db('sale_items')
