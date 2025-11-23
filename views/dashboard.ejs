@@ -304,6 +304,8 @@ const formatDate = (date) => {
     // Sales Trend Chart
     const salesData = <%- JSON.stringify(salesTrend) %>;
     
+    console.log('Raw Sales Data:', salesData);
+    
     // Fill missing dates with 0
     const dates = [];
     const amounts = [];
@@ -314,9 +316,16 @@ const formatDate = (date) => {
       const dateStr = date.toISOString().split('T')[0];
       dates.push(date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
       
-      const found = salesData.find(s => s.date === dateStr);
+      // Compare dengan format yang sama dari database
+      const found = salesData.find(s => {
+        const dbDate = new Date(s.date).toISOString().split('T')[0];
+        return dbDate === dateStr;
+      });
       amounts.push(found ? parseFloat(found.total) : 0);
     }
+    
+    console.log('Chart Dates:', dates);
+    console.log('Chart Amounts:', amounts);
     
     const ctx = document.getElementById('salesChart');
     if (ctx) {
