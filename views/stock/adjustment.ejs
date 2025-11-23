@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Warung POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .sidebar-link.active {
+      background-color: #dbeafe;
+      color: #2563eb;
+      border-right: 4px solid #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen overflow-hidden">
+    <%- include('../partials/sidebar', { page }) %>
+    
+    <main class="flex-1 overflow-y-auto">
+      <%- include('../partials/header', { title }) %>
+      
+      <div class="p-4 md:p-8">
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+              <p class="text-sm text-yellow-700">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Perhatian:</strong> Fitur ini untuk menyesuaikan stok jika terjadi ketidaksesuaian dengan fisik barang (opname).
+              </p>
+            </div>
+            
+            <form method="POST" action="/stock/adjustment">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Produk *</label>
+                  <select name="product_id" required id="productSelect"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Pilih Produk</option>
+                    <% products.forEach(product => { %>
+                      <option value="<%= product.id %>" 
+                              data-stock="<%= product.stock %>" 
+                              data-unit="<%= product.unit %>">
+                        <%= product.name %>
+                      </option>
+                    <% }); %>
+                  </select>
+                </div>
+                
+                <div id="stockInfo" class="hidden p-4 bg-gray-50 rounded-lg">
+                  <p class="text-sm text-gray-700 mb-1">
+                    Stok sistem saat ini: <span id="currentStock" class="font-bold text-lg text-blue-600"></span>
+                  </p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Stok Baru (Fisik) *</label>
+                  <input type="number" name="new_stock" required min="0" id="newStock"
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <p class="text-xs text-gray-500 mt-1">Masukkan jumlah stok sesuai hasil perhitungan fisik</p>
+                </div>
+                
+                <div id="difference" class="hidden p-4 rounded-lg">
+                  <p class="text-sm font-medium">
+                    Selisih: <span id="diffAmount" class="text-lg font-bold"></span>
+                  </p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan *</label>
+                  <textarea name="notes" rows="3" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Contoh: Stock opname bulanan, Barang rusak/hilang, dll"></textarea>
+                </div>
+                
+                <div class="flex items-center space-x-4 pt-4">
+                  <button type="submit" class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    <i class="fas fa-sync"></i> Sesuaikan Stok
+                  </button>
+                  <a href="/stock" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-times"></i> Batal
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    let currentStockValue = 0;
+    
+    document.getElementById('productSelect').addEventListener('change', function() {
+      const option = this.options[this.selectedIndex];
+      const stockInfo = document.getElementById('stockInfo');
+      
+      if (this.value) {
+        currentStockValue = parseInt(option.dataset.stock);
+        const unit = option.dataset.unit;
+        document.getElementById('currentStock').textContent = currentStockValue + ' ' + unit;
+        stockInfo.classList.remove('hidden');
+      } else {
+        stockInfo.classList.add('hidden');
+        document.getElementById('difference').classList.add('hidden');
+      }
+    });
+    
+    document.getElementById('newStock').addEventListener('input', function() {
+      const newStock = parseInt(this.value) || 0;
+      const diffDiv = document.getElementById('difference');
+      const diffAmount = document.getElementById('diffAmount');
+      
+      if (this.value && document.getElementById('productSelect').value) {
+        const diff = newStock - currentStockValue;
+        diffAmount.textContent = (diff >= 0 ? '+' : '') + diff;
+        
+        if (diff > 0) {
+          diffDiv.className = 'p-4 rounded-lg bg-green-50';
+          diffAmount.className = 'text-lg font-bold text-green-600';
+        } else if (diff < 0) {
+          diffDiv.className = 'p-4 rounded-lg bg-red-50';
+          diffAmount.className = 'text-lg font-bold text-red-600';
+        } else {
+          diffDiv.className = 'p-4 rounded-lg bg-gray-50';
+          diffAmount.className = 'text-lg font-bold text-gray-600';
+        }
+        
+        diffDiv.classList.remove('hidden');
+      } else {
+        diffDiv.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

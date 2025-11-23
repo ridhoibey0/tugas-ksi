@@ -1,0 +1,143 @@
+<% 
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+%>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Warung POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .sidebar-link.active {
+      background-color: #dbeafe;
+      color: #2563eb;
+      border-right: 4px solid #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen overflow-hidden">
+    <%- include('../partials/sidebar', { page }) %>
+    
+    <main class="flex-1 overflow-y-auto">
+      <%- include('../partials/header', { title }) %>
+      
+      <div class="p-4 md:p-8">
+        <div class="mb-4 md:mb-6 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div class="flex items-center space-x-4">
+            <form method="GET" class="flex space-x-2">
+              <select name="type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Semua Tipe</option>
+                <option value="in" <%= selectedType === 'in' ? 'selected' : '' %>>Masuk</option>
+                <option value="out" <%= selectedType === 'out' ? 'selected' : '' %>>Keluar</option>
+                <option value="adjustment" <%= selectedType === 'adjustment' ? 'selected' : '' %>>Penyesuaian</option>
+              </select>
+              <select name="product_id" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">Semua Produk</option>
+                <% products.forEach(product => { %>
+                  <option value="<%= product.id %>" <%= selectedProduct == product.id ? 'selected' : '' %>>
+                    <%= product.name %>
+                  </option>
+                <% }); %>
+              </select>
+              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+            </form>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <a href="/stock/add" class="text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+              <i class="fas fa-plus"></i> Tambah Stok
+            </a>
+            <a href="/stock/adjustment" class="text-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+              <i class="fas fa-edit"></i> Penyesuaian
+            </a>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+          <table class="w-full min-w-[900px]">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tanggal</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Produk</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tipe</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stok Sebelum</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stok Sesudah</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% movements.forEach(movement => { %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <%= formatDate(movement.created_at) %>
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <div class="font-medium text-gray-900"><%= movement.product_name %></div>
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <% if (movement.type === 'in') { %>
+                      <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                        <i class="fas fa-arrow-down"></i> Masuk
+                      </span>
+                    <% } else if (movement.type === 'out') { %>
+                      <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                        <i class="fas fa-arrow-up"></i> Keluar
+                      </span>
+                    <% } else { %>
+                      <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                        <i class="fas fa-sync"></i> Penyesuaian
+                      </span>
+                    <% } %>
+                  </td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                    <%= movement.quantity %> <%= movement.unit %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <%= movement.before_stock %>
+                  </td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                    <%= movement.after_stock %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600">
+                    <%= movement.notes || '-' %>
+                  </td>
+                </tr>
+              <% }); %>
+              
+              <% if (movements.length === 0) { %>
+                <tr>
+                  <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
+                    <p>Belum ada pergerakan stok</p>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        
+        <% if (movements.length >= 100) { %>
+          <div class="mt-4 text-center text-sm text-gray-600">
+            <p>Menampilkan 100 data terakhir</p>
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

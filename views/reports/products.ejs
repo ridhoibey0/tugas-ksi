@@ -1,0 +1,177 @@
+<% 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+%>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Warung POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .sidebar-link.active {
+      background-color: #dbeafe;
+      color: #2563eb;
+      border-right: 4px solid #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen overflow-hidden">
+    <%- include('../partials/sidebar', { page }) %>
+    
+    <main class="flex-1 overflow-y-auto">
+      <%- include('../partials/header', { title }) %>
+      
+      <div class="p-4 md:p-8">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="px-4 md:px-6 py-4 border-b">
+            <h3 class="text-base md:text-lg font-semibold text-gray-800">Performa Produk</h3>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[900px]">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Nama Produk</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Kategori</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Harga</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Stok</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Terjual</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Pendapatan</th>
+                  <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% products.forEach(product => { %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-3 md:px-6 py-4">
+                      <div class="font-medium text-gray-900 text-sm"><%= product.name %></div>
+                      <div class="text-xs text-gray-500"><%= product.description || '-' %></div>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-sm">
+                      <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        <%= product.category %>
+                      </span>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-900">
+                      <%= formatCurrency(product.price) %>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm text-gray-900">
+                      <%= product.stock %> <%= product.unit %>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm font-medium text-gray-900">
+                      <%= product.total_sold %> <%= product.unit %>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-xs md:text-sm font-bold text-green-600">
+                      <%= formatCurrency(product.total_revenue) %>
+                    </td>
+                    <td class="px-3 md:px-6 py-4 text-sm">
+                      <% if (product.stock <= product.min_stock) { %>
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                          <i class="fas fa-exclamation-triangle"></i> Kritis
+                        </span>
+                      <% } else if (product.total_sold > 10) { %>
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                          <i class="fas fa-fire"></i> Laris
+                        </span>
+                      <% } else if (product.total_sold === 0) { %>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                          <i class="fas fa-pause"></i> Tidak Terjual
+                        </span>
+                      <% } else { %>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                          <i class="fas fa-check"></i> Normal
+                        </span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+                
+                <% if (products.length === 0) { %>
+                  <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                      <i class="fas fa-inbox text-4xl mb-2"></i>
+                      <p>Tidak ada data produk</p>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+              
+              <% if (products.length > 0) { %>
+                <tfoot class="bg-gray-50 font-bold">
+                  <tr>
+                    <td colspan="4" class="px-6 py-4 text-right">TOTAL:</td>
+                    <td class="px-6 py-4">
+                      <%= products.reduce((sum, p) => sum + parseInt(p.total_sold), 0) %> item
+                    </td>
+                    <td class="px-6 py-4 text-green-600">
+                      <%= formatCurrency(products.reduce((sum, p) => sum + parseFloat(p.total_revenue), 0)) %>
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              <% } %>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Insights -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="bg-green-100 p-3 rounded-lg">
+                <i class="fas fa-trophy text-green-600 text-xl"></i>
+              </div>
+              <h4 class="font-semibold text-gray-800">Produk Terlaris</h4>
+            </div>
+            <% 
+            const topProduct = products.sort((a, b) => b.total_sold - a.total_sold)[0];
+            if (topProduct && topProduct.total_sold > 0) {
+            %>
+              <p class="text-lg font-bold text-gray-900"><%= topProduct.name %></p>
+              <p class="text-sm text-gray-600"><%= topProduct.total_sold %> <%= topProduct.unit %> terjual</p>
+            <% } else { %>
+              <p class="text-gray-500">Belum ada data</p>
+            <% } %>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="bg-red-100 p-3 rounded-lg">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+              </div>
+              <h4 class="font-semibold text-gray-800">Stok Menipis</h4>
+            </div>
+            <% 
+            const lowStock = products.filter(p => p.stock <= p.min_stock);
+            %>
+            <p class="text-3xl font-bold text-red-600"><%= lowStock.length %></p>
+            <p class="text-sm text-gray-600">Produk perlu restock</p>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center space-x-3 mb-4">
+              <div class="bg-blue-100 p-3 rounded-lg">
+                <i class="fas fa-box text-blue-600 text-xl"></i>
+              </div>
+              <h4 class="font-semibold text-gray-800">Total Produk</h4>
+            </div>
+            <p class="text-3xl font-bold text-blue-600"><%= products.length %></p>
+            <p class="text-sm text-gray-600">Varian produk</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

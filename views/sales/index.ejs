@@ -1,0 +1,118 @@
+<% 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+%>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Warung POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .sidebar-link.active {
+      background-color: #dbeafe;
+      color: #2563eb;
+      border-right: 4px solid #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen overflow-hidden">
+    <%- include('../partials/sidebar', { page }) %>
+    
+    <main class="flex-1 overflow-y-auto">
+      <%- include('../partials/header', { title }) %>
+      
+      <div class="p-4 md:p-8">
+        <div class="mb-4 md:mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <form method="GET" class="flex flex-col sm:flex-row gap-2">
+            <input type="date" name="date" value="<%= selectedDate %>" 
+                   class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+          </form>
+          <a href="/sales/create" class="w-full sm:w-auto text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            <i class="fas fa-plus"></i> Input Penjualan
+          </a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+          <table class="w-full min-w-[768px]">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">No Invoice</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tanggal</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Bayar</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Metode</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% sales.forEach(sale => { %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 text-sm font-medium text-blue-600">
+                    <%= sale.invoice_number %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <%= formatDate(sale.created_at) %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <%= sale.customer_name || '-' %>
+                  </td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                    <%= formatCurrency(sale.total_amount) %>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    <%= formatCurrency(sale.paid_amount) %>
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <span class="px-2 py-1 <%= sale.payment_method === 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %> rounded-full text-xs">
+                      <%= sale.payment_method %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <a href="/sales/<%= sale.id %>" class="text-blue-600 hover:text-blue-800">
+                      <i class="fas fa-eye"></i> Detail
+                    </a>
+                  </td>
+                </tr>
+              <% }); %>
+              
+              <% if (sales.length === 0) { %>
+                <tr>
+                  <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
+                    <p>Belum ada data penjualan</p>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

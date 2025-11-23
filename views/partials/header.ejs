@@ -1,0 +1,52 @@
+<header class="bg-white shadow-sm sticky top-0 z-10">
+  <div class="flex items-center justify-between px-4 md:px-8 py-3 md:py-4">
+    <!-- Hamburger Menu (Mobile) -->
+    <button id="menuBtn" class="md:hidden text-gray-700 hover:text-blue-600 focus:outline-none mr-3">
+      <i class="fas fa-bars text-2xl"></i>
+    </button>
+    
+    <div class="flex-1">
+      <h2 class="text-lg md:text-2xl font-bold text-gray-800"><%= title %></h2>
+      <p class="text-xs md:text-sm text-gray-500 hidden sm:block">
+        <i class="far fa-calendar"></i>
+        <%= new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+      </p>
+    </div>
+    <div class="flex items-center space-x-2 md:space-x-4">
+      <div class="text-right hidden md:block">
+        <p class="text-sm font-medium text-gray-700">Administrator</p>
+        <p class="text-xs text-gray-500">Admin</p>
+      </div>
+      <div class="bg-blue-600 p-2 rounded-full">
+        <i class="fas fa-user text-white text-sm md:text-base"></i>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Mobile Menu Toggle
+  const menuBtn = document.getElementById('menuBtn');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const closeSidebar = document.getElementById('closeSidebar');
+  
+  if (menuBtn && sidebar && overlay) {
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('hidden');
+    });
+    
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+    
+    if (closeSidebar) {
+      closeSidebar.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.add('hidden');
+      });
+    }
+  }
+</script>

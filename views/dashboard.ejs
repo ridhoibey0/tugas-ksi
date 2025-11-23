@@ -1,0 +1,399 @@
+<% 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(amount);
+};
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+%>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Warung POS</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .sidebar-link.active {
+      background-color: #dbeafe;
+      color: #2563eb;
+      border-right: 4px solid #2563eb;
+    }
+    @media (max-width: 768px) {
+      .mobile-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .mobile-sidebar.active {
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Mobile Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="mobile-sidebar fixed md:static inset-y-0 left-0 z-30 w-64 bg-white shadow-lg md:translate-x-0">
+      <div class="p-6 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div class="flex items-center space-x-3">
+          <div class="bg-white p-2 rounded-lg">
+            <i class="fas fa-store text-blue-600 text-2xl"></i>
+          </div>
+          <div class="text-white">
+            <h1 class="font-bold text-xl">Warung Pak Irik</h1>
+            <p class="text-xs text-blue-100">Sistem Manajemen</p>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="mt-6">
+        <a href="/" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors <%= page === 'dashboard' ? 'active' : '' %>">
+          <i class="fas fa-home w-6"></i>
+          <span>Dashboard</span>
+        </a>
+        
+        <div class="px-4 py-2 mt-4">
+          <p class="text-xs font-semibold text-gray-400 uppercase">Transaksi</p>
+        </div>
+        
+        <a href="/sales" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors <%= page === 'sales' ? 'active' : '' %>">
+          <i class="fas fa-shopping-cart w-6"></i>
+          <span>Penjualan</span>
+        </a>
+        
+        <div class="px-4 py-2 mt-4">
+          <p class="text-xs font-semibold text-gray-400 uppercase">Data Master</p>
+        </div>
+        
+        <a href="/products" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors <%= page === 'products' ? 'active' : '' %>">
+          <i class="fas fa-box w-6"></i>
+          <span>Produk</span>
+        </a>
+        
+        <a href="/stock" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors <%= page === 'stock' ? 'active' : '' %>">
+          <i class="fas fa-warehouse w-6"></i>
+          <span>Manajemen Stok</span>
+        </a>
+        
+        <div class="px-4 py-2 mt-4">
+          <p class="text-xs font-semibold text-gray-400 uppercase">Laporan</p>
+        </div>
+        
+        <a href="/reports" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors <%= page === 'reports' ? 'active' : '' %>">
+          <i class="fas fa-chart-line w-6"></i>
+          <span>Laporan Penjualan</span>
+        </a>
+        
+        <a href="/reports/products" class="sidebar-link flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+          <i class="fas fa-chart-bar w-6"></i>
+          <span>Laporan Produk</span>
+        </a>
+        
+        <!-- Logout -->
+        <div class="px-4 py-2 mt-4">
+          <a href="/logout" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors rounded-lg">
+            <i class="fas fa-sign-out-alt w-6"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+      <!-- Header with Hamburger -->
+      <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="flex items-center justify-between px-4 md:px-8 py-4">
+          <!-- Hamburger Menu (Mobile) -->
+          <button id="menuBtn" class="md:hidden text-gray-700 hover:text-blue-600 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          
+          <div class="flex-1 md:flex-none">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800"><%= title %></h2>
+            <p class="text-xs md:text-sm text-gray-500 hidden sm:block">
+              <i class="far fa-calendar"></i>
+              <%= new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+            </p>
+          </div>
+          <div class="flex items-center space-x-2 md:space-x-4">
+            <div class="text-right hidden md:block">
+              <p class="text-sm font-medium text-gray-700">Administrator</p>
+              <p class="text-xs text-gray-500">Admin</p>
+            </div>
+            <div class="bg-blue-600 p-2 rounded-full">
+              <i class="fas fa-user text-white"></i>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Page Content -->
+      <div class="p-4 md:p-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+          <!-- Total Produk -->
+          <div class="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <p class="text-xs md:text-sm text-gray-600 mb-1">TOTAL PRODUK</p>
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800"><%= stats.totalProducts %></h3>
+              </div>
+              <div class="bg-blue-100 p-3 md:p-4 rounded-lg">
+                <i class="fas fa-box text-blue-600 text-xl md:text-2xl"></i>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Omset Hari Ini -->
+          <div class="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <p class="text-xs md:text-sm text-gray-600 mb-1">OMSET</p>
+                <h3 class="text-lg md:text-2xl font-bold text-gray-800"><%= formatCurrency(stats.todaySales) %></h3>
+              </div>
+              <div class="bg-green-100 p-3 md:p-4 rounded-lg">
+                <i class="fas fa-dollar-sign text-green-600 text-xl md:text-2xl"></i>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Stok Kritis -->
+          <div class="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <p class="text-xs md:text-sm text-gray-600 mb-1">STOK KRITIS</p>
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800"><%= stats.criticalStock %></h3>
+                <p class="text-xs text-gray-500">Item</p>
+              </div>
+              <div class="bg-red-100 p-3 md:p-4 rounded-lg">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl md:text-2xl"></i>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Total Pelanggan -->
+          <div class="bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <p class="text-xs md:text-sm text-gray-600 mb-1">PEMASOK</p>
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800"><%= stats.totalCustomers %></h3>
+              </div>
+              <div class="bg-yellow-100 p-3 md:p-4 rounded-lg">
+                <i class="fas fa-truck text-yellow-600 text-xl md:text-2xl"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <!-- Sales Trend Chart -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-4 md:mb-6">
+              <h3 class="text-base md:text-lg font-semibold text-gray-800">
+                <i class="fas fa-chart-area text-blue-600 mr-2"></i>
+                Tren Penjualan (7 Hari)
+              </h3>
+            </div>
+            <canvas id="salesChart" height="100"></canvas>
+          </div>
+          
+          <!-- Best Selling Products -->
+          <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                Produk Terlaris
+              </h3>
+            </div>
+            <div class="space-y-4">
+              <% bestSelling.forEach((product, index) => { %>
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <% if (index === 0) { %>
+                      <i class="fas fa-medal text-yellow-400 text-2xl"></i>
+                    <% } else if (index === 1) { %>
+                      <i class="fas fa-medal text-gray-400 text-2xl"></i>
+                    <% } else if (index === 2) { %>
+                      <i class="fas fa-medal text-orange-400 text-2xl"></i>
+                    <% } else { %>
+                      <i class="fas fa-circle text-gray-300"></i>
+                    <% } %>
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-medium text-gray-800"><%= product.name %></p>
+                    <p class="text-sm text-gray-500"><%= product.unit %></p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-blue-600"><%= product.total_sold %></p>
+                    <p class="text-xs text-gray-500">Terjual</p>
+                  </div>
+                </div>
+              <% }); %>
+              
+              <% if (bestSelling.length === 0) { %>
+                <p class="text-center text-gray-500 py-8">Belum ada data penjualan</p>
+              <% } %>
+            </div>
+            
+            <div class="mt-6 pt-4 border-t">
+              <a href="/reports/products" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-center">
+                Lihat Detail Laporan
+                <i class="fas fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="mt-6 md:mt-8">
+          <h3 class="text-base md:text-lg font-semibold text-gray-800 mb-3 md:mb-4">Akses Cepat</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            <a href="/sales/create" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4 md:p-6 hover:from-blue-700 hover:to-blue-800 transition-all shadow-md">
+              <div class="flex items-center space-x-3 md:space-x-4">
+                <i class="fas fa-plus-circle text-2xl md:text-3xl"></i>
+                <div>
+                  <h4 class="font-semibold text-base md:text-lg">Catat Penjualan</h4>
+                  <p class="text-xs md:text-sm text-blue-100">Input transaksi baru</p>
+                </div>
+              </div>
+            </a>
+            
+            <a href="/stock/add" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg p-4 md:p-6 hover:from-purple-700 hover:to-purple-800 transition-all shadow-md">
+              <div class="flex items-center space-x-3 md:space-x-4">
+                <i class="fas fa-shopping-cart text-2xl md:text-3xl"></i>
+                <div>
+                  <h4 class="font-semibold text-base md:text-lg">Restock Barang</h4>
+                  <p class="text-xs md:text-sm text-purple-100">Tambah stok produk</p>
+                </div>
+              </div>
+            </a>
+            
+            <a href="/products" class="bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg p-4 md:p-6 hover:from-gray-800 hover:to-gray-900 transition-all shadow-md">
+              <div class="flex items-center space-x-3 md:space-x-4">
+                <i class="fas fa-box text-2xl md:text-3xl"></i>
+                <div>
+                  <h4 class="font-semibold text-base md:text-lg">Produk</h4>
+                  <p class="text-xs md:text-sm text-gray-300">Kelola data produk</p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script>
+    // Sales Trend Chart
+    const salesData = <%- JSON.stringify(salesTrend) %>;
+    
+    // Fill missing dates with 0
+    const dates = [];
+    const amounts = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dates.push(date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+      
+      const found = salesData.find(s => s.date === dateStr);
+      amounts.push(found ? parseFloat(found.total) : 0);
+    }
+    
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Total Penjualan (Rp)',
+            data: amounts,
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  label += new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                  }).format(context.parsed.y);
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(value);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Mobile Menu Toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    
+    if (menuBtn && sidebar && overlay) {
+      menuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('hidden');
+      });
+      
+      overlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        overlay.classList.add('hidden');
+      });
+    }
+  </script>
+</body>
+</html>
